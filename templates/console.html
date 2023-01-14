@@ -1,0 +1,279 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Potee Console</title>
+    <link rel="stylesheet" href="css/xterm.css" />
+    <link rel="stylesheet" href="css/modal.css" />
+    <script src="js/xterm/lib/xterm.js"></script>
+    <script src="js/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
+    <script src="js/xterm-addon-webgl/lib/xterm-addon-webgl.js"></script>
+    <script src="js/axios/dist/axios.min.js"></script>
+
+</head>
+
+<body>
+    <div id="terminal"></div>
+    <div class="modal" id="login">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <form class="modal-form" id="modal-form" action="#" method="post" onsubmit="login();return false">
+                <br>
+                <label for="email">Login</label>
+                <input type="text" size="15" id="name" name="name" value=""><br>
+                <label for="password">Password</label>
+                <input type="password" size="15" id="password" name="password" value=""><br><br>
+                <input type="submit" class="button" value="< Login >">
+
+
+            </form>
+            <h3 class="errorMessage" id="loginError" style="color: red;"></h3>
+
+        </div>
+
+    </div>
+    <div class="modal" id="register">
+        <!-- Modal content -->
+        <div class="modal-content">
+            <form class="modal-form" id="modal-form" action="#" method="post" onsubmit="register();return false">
+                <br>
+                <label for="regEmail">Login</label>
+                <input type="text" size="15" id="regLogin" name="regLogin" value=""><br>
+                <label for="regEmail">Email</label>
+                <input type="text" size="15" id="regEmail" name="regEmail" value=""><br>
+                <label for="password">Password</label>
+                <input type="password" size="15" id="regPassword" name="regPassword" value=""><br>
+                <label for="password">Confirm</label>
+                <input type="password" size="15" id="confirm-password" name="confirm-password" value=""><br><br>
+                <input type="submit" class="button" value="< Register >">
+            </form>
+            <h3 class="errorMessage" id="regError"></h3>
+        </div>
+
+    </div>
+    <script>
+        var term = new Terminal({
+
+            cursorBlink: "block",
+            convertEol: true,
+            fontFamily: `'Fira Mono', monospace`,
+            fontSize: 20,
+            allowProposedApi: true,
+        });
+        const fitAddon = new FitAddon.FitAddon();
+        term.loadAddon(fitAddon);
+        term.open(document.getElementById("terminal"));
+        fitAddon.fit();
+        const addon = new WebglAddon.WebglAddon();
+        addon.onContextLoss(e => {
+            addon.dispose();
+        });
+        term.loadAddon(addon);
+        term.attachCustomKeyEventHandler((arg) => {
+            if (arg.ctrlKey && arg.shiftKey && arg.code === "KeyV" && arg.type === "keydown") {
+                navigator.clipboard.readText()
+                    .then(text => {
+                        curr_line += text;
+                        term.write("\33[2K" + prefix + curr_line);
+                    })
+            };
+            return true;
+        });
+
+        let ws = new WebSocket(location.origin.replace(/^http/, 'ws') + "/ws");
+        var curr_line = "";
+        var pwd = "~"
+        var prefix = `\r\u001b[32mconsole@potee:\u001b[34m${pwd}\u001b[32m$> \u001b[37m`
+        var entries = [];
+        var currPos = 0;
+        var pos = 0;
+        var isModal = false;
+        var loginModal = document.getElementById("login")
+        var regModal = document.getElementById("register")
+
+        const validateEmail = (email) => {
+            return String(email)
+                .toLowerCase()
+                .match(
+                    /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+                );
+        };
+        const checkPassword = (password) => {
+            return String(password).match()
+        }
+
+        const register = async () => {
+            try {
+                var email = document.getElementById('regEmail').value
+                var name = document.getElementById('regLogin').value
+                var password = document.getElementById('regPassword').value
+                var configrmPassword = document.getElementById('regPassword').value
+
+                var error = ""
+                if (!validateEmail(email)) {
+                    error = "invalid email";
+                } else if (!password == configrmPassword || password === "") {
+                    error = "passwords not match";
+                } else if (password.length < 8) {
+                    error = "passwords incorrect";
+                }
+
+                if (error !== "") {
+                    document.getElementById('regError').innerHTML = error;
+                    return
+                }
+                const result = await axios.post(
+                    '/register',
+                    JSON.stringify({ name: name, email: email, password: password }),
+                    { withCredentials: true }
+                ).then(res => {
+                    var modal = document.getElementById("register")
+                    this.regModal.style.display = "none";
+                    this.isModal = false;
+                    term.writeln("")
+                    term.write(res.data)
+                    term.write(prefix)
+                }).catch(function (error) {
+                    document.getElementById('regError').innerHTML = error.response.data;
+                })
+            } catch (errors) {
+                console.error(errors);
+            }
+        };
+        const login = async () => {
+            try {
+                var name = document.getElementById('name').value
+                var password = document.getElementById('password').value
+                console.log(name, password)
+                const result = await axios.post(
+                    '/login',
+                    JSON.stringify({ name: name, password: password }),
+                    { withCredentials: true }
+                ).then(res => {
+                    var modal = document.getElementById("login")
+                    this.loginModal.style.display = "none";
+                    this.isModal = false;
+                    term.writeln("")
+                    term.write(res.data)
+                    term.write(prefix)
+                }).catch(function (error) {
+                    document.getElementById('loginError').innerHTML = error.response.data;
+                })
+            } catch (errors) {
+                console.error(errors);
+            }
+        };
+
+        prompt = () => {
+            if (curr_line) {
+                if (curr_line == "clear") {
+                    term.reset();
+                    banner()
+                    term.writeln("");
+                    term.write(prefix);
+                } else if (curr_line.startsWith("cd ")) {
+                    var args = curr_line.split(" ")
+                    console.log(args)
+                    if (args.length == 2) {
+                        if (["~", "/", "~/"].includes(args[1])) {
+                            pwd = "~"
+                        } else {
+                            pwd = args[1]
+                        }
+                        prefix = `\r\u001b[32mconsole@potee:\u001b[34m~/${pwd}\u001b[32m$> \u001b[37m`
+                        term.writeln("")
+                        term.write(prefix);
+                    }
+                } else if (curr_line == "cd") {
+                    pwd = "~"
+                    prefix = `\r\u001b[32mconsole@potee:\u001b[34m${pwd}\u001b[32m$> \u001b[37m`
+                    term.writeln("")
+                    term.write(prefix);
+                } else if (curr_line == "login") {
+                    var modal = document.getElementById("login")
+                    this.loginModal.style.display = "block";
+                    this.isModal = true
+                } else if (curr_line == "reg") {
+                    var modal = document.getElementById("register")
+                    this.regModal.style.display = "block";
+                    this.isModal = true
+                } else {
+                    let data = { pwd: pwd, cmd: curr_line };
+                    ws.send(JSON.stringify(data));
+                }
+            } else {
+                term.writeln("");
+                term.write(prefix);
+            }
+        };
+        function banner() {
+            term.writeln("     ___         __               ______                       __    ")
+            term.writeln("    / __ \\____  / /____  ___     / ____/___  ____  _________  / /__  ")
+            term.writeln("   / /_/ / __ \\/ __/ _ \\/ _ \\   / /   / __ \\/ __ \\/ ___/ __ \\/ / _ \\ ")
+            term.writeln("  / ____/ /_/ / /_/  __/  __/  / /___/ /_/ / / / (__  ) /_/ / /  __/ ")
+            term.writeln(" /_/    \\____/\\__/\\___/\\___/   \\____/\\____/_/ /_/____/\\____/_/\\___/  ")
+            term.writeln(" ")
+            term.writeln(" @MireaCTF")
+        }
+
+        banner()
+        ws.onmessage = msg => {
+            answer = JSON.parse(msg.data)
+            if (answer.pwd != "~") {
+                prefix = `\r\u001b[32mconsole@potee:\u001b[34m~/${answer.pwd}\u001b[32m$> \u001b[37m`
+            }
+            term.writeln("");
+            term.write(answer.answer);
+            term.write(prefix);
+        };
+
+        term.onKey(key => {
+            if (!isModal) {
+                const char = key.domEvent.key;
+                if (char === "Enter") {
+
+                    if (curr_line) {
+                        entries.push(curr_line);
+                        currPos = entries.length;
+                    }
+                    this.prompt();
+                    curr_line = "";
+
+                } else if (char === "Backspace") {
+                    if (curr_line) {
+                        curr_line = curr_line.slice(0, curr_line.length - 1);
+                        term.write("\b \b");
+                    }
+                } else if (char === 'ArrowUp') {
+                    if (entries.length > 0) {
+                        if (currPos > 0) {
+                            currPos -= 1;
+                        }
+                        curr_line = entries[currPos];
+                        term.write("\33[2K" + prefix + curr_line);
+                    }
+                } else if (char === 'ArrowDown') {
+                    if (entries.length > 0) {
+                        currPos += 1;
+                        if (entries.length === 0 || currPos === entries.length) {
+                            currPos -= 1;
+                            curr_line = "";
+                        } else {
+                            curr_line = entries[currPos];
+                        }
+                        term.write("\33[2K" + prefix + curr_line);
+                    }
+                } else if (char == 'ArrowLeft') {
+                } else if (char == 'ArrowRight') {
+                } else {
+                    curr_line += char;
+                    term.write(char);
+                }
+            }
+        });
+        this.prompt();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,36 @@
+{{ template "head" }}
+<div class="d-flex justify-content-center align-items-center" style="height: 70vh;">
+    <form class="w-25">
+        <!-- Email input -->
+        <h4 class="text-center mb-3 fw-normal">Sign up</h4>
+        <div class="form-floating mb-2">
+            <input type="text" id="login" class="form-control bg-secondary border-dark" placeholder="Login" />
+            <label for="login">Login</label>
+        </div>
+        <select class="form-select" aria-label="Default select example">
+            <option selected>Open this select menu</option>
+            <option value="1">One</option>
+            <option value="2">Two</option>
+            <option value="3">Three</option>
+          </select>
+
+
+        <!-- Password input -->
+        <div class="form-floating mb-2">
+            <input type="password" id="password" class="form-control bg-secondary border-dark" placeholder="Password" />
+
+            <label for="password">Password</label>
+        </div>
+        
+
+        <!-- 2 column grid layout for inline styling -->
+        
+        <!-- Submit button -->
+        <div class="d-flex justify-content-center ">
+            <button type="button" class="btn btn-primary btn-block mb-4 w-100">Sign Up</button>
+        </div>
+        <!-- Register buttons -->
+    </form>
+</div>
+
+{{ template "end" }}

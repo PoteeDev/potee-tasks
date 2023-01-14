@@ -1,0 +1,25 @@
+groups:
+  - BBSO-01-17
+  - BBSO-02-17
+  - BBSO-03-17
+services_subnet: 10.10.0.0/24
+clients_subnet: 10.100.0.0/24
+ip_count: 6
+tasks:
+  - name: ch1
+    description: First challenge for ssh prank
+    container: 1
+    category: tools
+    points: 100
+
+  - name: ch2
+    description: Second challenge for dirb
+    container: 2
+    points: 200
+    category: tools
+  
+  - name: db1
+    description: Second challenge for dirb
+    container: 2
+    points: 200
+    category: db

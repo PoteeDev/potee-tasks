@@ -1,0 +1,112 @@
+.modal {
+    display: none;
+    /* Hidden by default */
+    position: fixed;
+    /* Stay in place */
+    z-index: 99;
+    /* Sit on top */
+    /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%;
+    /* Full width */
+    height: 100%;
+    /* Full height */
+    overflow: auto;
+    /* Enable scroll if needed */
+    background-color: rgb(18, 47, 170);
+    /* Black w/ opacity */
+}
+
+/* Modal Content */
+/* .modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+  } */
+
+.modal-content {
+    font-family: Fira Mono, monospace;
+    font-size: 16px;
+    position: absolute;
+    left: 32%;
+    top: 30%;
+    width: 30%;
+
+    margin-left: -5px;
+    border: 2px solid #000000;
+    background-color: rgb(175, 175, 175);
+    /* Black w/ opacity */
+
+    box-shadow: 0 0 0 0, 20px 20px 0 0px black;
+}
+
+.button {
+    font-family: Fira Mono, monospace;
+    background-color:rgb(175, 175, 175);
+    border: none;
+    color: rgb(0, 0, 0);
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 25px;
+    margin: 4px 2px;
+}
+
+.modal-form {
+    text-align: center;
+    padding: 10px 15px;
+    margin: 10px 5px;
+    border: 2px solid #000000;
+}
+
+label {
+    text-align: left;
+    width: 30%;
+    font-size: 25px;
+    display: inline-block;
+}
+
+input[type="text"],
+textarea {
+    font-family: Fira Mono, monospace;
+    font-size: 25px;
+    background-color: #d1d1d1;
+    padding: 2px;
+    margin: 2px;
+}
+input[type="password"],
+textarea {
+    font-family: Fira Mono, monospace;
+    font-size: 25px;
+    background-color: #d1d1d1;
+    padding: 2px;
+    margin: 2px;
+}
+
+*:focus {
+    outline: none;
+}
+
+.errorMessage {
+    color: red;
+    margin: 4px 4px 6px 4px;
+    text-align: center;
+}
+
+/* The Close Button */
+.close {
+    color: #aaaaaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}

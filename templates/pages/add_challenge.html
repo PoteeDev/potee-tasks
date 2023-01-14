@@ -1,0 +1,39 @@
+{{ define "add_challenge" }}
+<div class="modal fade" id="AssignChallenge" tabindex="-1" aria-labelledby="AssignChallengeLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark border-success">
+            <div class="modal-header  border-0">
+                <h5 class="modal-title">Challenge</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" name="assignChallenge" onsubmit="assignChallengeRequest();return false;">
+                    <div class="form-floating m-1">
+                        <select class="form-select bg-dark text-white" id="challengesSelect"
+                            aria-label="Floating label select example">
+                            {{ range .Challenges }}
+                            <option value="{{ .Name }}">{{ .Name }}</option>
+                            {{ end }}
+                        </select>
+                        <label for="challengesSelect">Challenges</label>
+                    </div>
+                    <div class="form-floating m-1">
+                        <select class="form-select bg-dark text-white" id="groupsSelect"
+                            aria-label="Floating label select example">
+                            {{ range .Groups }}
+                            <option value="{{ .GroupCode }}">{{ .GroupCode }}</option>
+                            {{ end }}
+                        </select>
+                        <label for="groupsSelect">Groups</label>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end border-0 m-1">
+                        <button type="submit" class="btn btn-outline-success">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{{ end }}

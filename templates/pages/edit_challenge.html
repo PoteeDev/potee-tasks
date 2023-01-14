@@ -1,0 +1,38 @@
+{{ define "edit_challenge" }}
+<div class="modal fade" id="Challenge{{ .ID }}" tabindex="-1" aria-labelledby="Challenge{{ .ID }}Label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark border-success">
+            <div class="modal-header  border-0">
+                <h5 class="modal-title">Challenge {{ .Name }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="d-flex justify-content-center">{{ .Description }}</p>
+                <form class="">
+                    <div class="form-floating m-1">
+                        <input type="text" class="form-control bg-dark text-white" id="floatingInputValue" value="{{ .Name }}">
+                        <label for="floatingInputValue">Name</label>
+                    </div>
+                    <div class="form-floating m-1">
+                        <textarea class="form-control bg-dark text-white" placeholder="Leave a comment here" id="floatingTextarea2" style="height: 100px" value>{{ .Description }}</textarea>
+                        <label for="floatingTextarea2">Description</label>
+                      </div>
+                      <div class="form-floating m-1">
+                        <select class="form-select bg-dark text-white" id="floatingSelect" aria-label="Floating label select example">
+                          <option selected>Open this select menu</option>
+                          <option value="1">One</option>
+                          <option value="2">Two</option>
+                          <option value="3">Three</option>
+                        </select>
+                        <label for="floatingSelect">Category</label>
+                      </div>
+                      <div class="d-flex justify-content-end border-0 m-1">
+                        <button type="button" class="btn btn-outline-success">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{{ end }}

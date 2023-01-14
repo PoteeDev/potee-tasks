@@ -1,0 +1,52 @@
+{{ template "head" . }}
+<div class="row flex-nowrap">
+    <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark">
+        {{ template "admin_sidebar" . }}
+    </div>
+
+    <div class="col py-3">
+        <ul class="nav nav-tabs mt-3" role="tablist">
+            {{ range $i, $g := .Groups }}
+
+            <li class="nav-item" role="presentation">
+                <button class="link-success nav-link{{ if eq $i 0 }} active{{ end }}" id="tab-{{ $g.ID }}"
+                    data-bs-toggle="tab" data-bs-target="#nav-tab-{{ $g.ID }}" type="button" role="tab"
+                    aria-controls="nav-tab-{{ $g.ID }}" aria-selected="{{ if eq $i 0 }}true{{ else }}flase{{ end }}">{{
+                    $g.GroupCode }}</button>
+            </li>
+            {{ end }}
+        </ul>
+        <div class="tab-content" id="nav-tabContent">
+            {{ range $i, $g := .Groups }}
+            <div class="tab-pane fade{{ if eq $i 0 }} show active{{ end }}" id="nav-tab-{{ $g.ID }}" role="tabpanel"
+                aria-labelledby="nav-tab-{{ $g.ID }}">
+                <table class="table table-sm table-dark">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Login</th>
+                            <th scope="col">SecondName</th>
+                            <th scope="col">FirstName</th>
+                            <th scope="col">Solved</th>
+                            <th scope="col">FirstName</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{ range $iter, $u := .Users }}
+                        <tr>
+                            <th scope="row">{{ $iter }}</th>
+                            <td>{{ $u.Login }}</td>
+                            <td>{{ $u.SecondName }}</td>
+                            <td>{{ $u.FirstName }}</td>
+                            <td>{{ len $u.UsersChallenges }}</td>
+                        </tr>
+                        {{ end }}
+                </table>
+            </div>
+            {{ end }}
+        </div>
+
+    </div>
+</div>
+
+{{ template "end" }}

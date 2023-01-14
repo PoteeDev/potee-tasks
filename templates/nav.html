@@ -1,0 +1,42 @@
+{{define "nav"}}
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
+    <div class="container">
+        <a class="navbar-brand" href="/">Potee</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
+            aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="/challenges">Challenges</a>
+                </li>
+            </ul>
+            {{ if .SessionUser.Login }}
+
+            <ul class="navbar-nav ms-auto">
+                {{ if eq .SessionUser.Role "admin" }}
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/users">Admin Panel</a>
+                </li>
+                {{ end }}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        {{ .SessionUser.Login }}
+                    </a>
+                    <ul class="dropdown-menu bg-dark border-success" aria-labelledby="navbarDropdownMenuLink">
+                        <li class="bg-transparent"><a class="dropdown-item text-white" href="/profile">Profile</a></li>
+                        <li>
+                            <hr class="dropdown-divider text-success">
+                        </li>
+                        <li><a class="dropdown-item text-danger" href="/logout">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+            {{ end }}
+        </div>
+    </div>
+</nav>
+{{end}}

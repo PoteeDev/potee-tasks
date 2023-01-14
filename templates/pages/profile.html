@@ -1,0 +1,158 @@
+{{ template "head" . }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div class="row pt-5">
+    <div class="col-md-3  h-25">
+        <div class="card bg-transparent border-success shadow">
+            <div class="card-body">
+                <div class="">
+                    {{/* <a href="#">
+                        <img src="https://bootdey.com/img/Content/avatar/avatar3.png" alt="">
+                    </a> */}}
+                    <p class="h2 pt-2">Profile</p>
+                    <p class="h3 m-0">{{ .User.FirstName }} {{ .User.SecondName }}<small class="text-muted">#{{
+                            .User.Login
+                            }}</small></p>
+                    <p class="h5 text-muted">{{ .User.Group.GroupCode }}</p>
+                </div>
+                <div class="d-flex">
+                    <a class="btn btn-sm btn-outline-warning my-2 p-1" href="/download/vpn"
+                        download="{{ .User.Login }}.conf"><i class="bi bi-download"></i> VPN Config</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="col-md-9">
+        <div class="card bg-transparent border-success shadow">
+            <div class="row">
+                <div class="col-2 mt-3 ms-3">
+                    <h1 class="h2">Info</h1>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-4">
+                        <h1 class="h5"><small class="h5 text-muted">Score:</small> {{ .Score }}</h1>
+                    </div>
+                    <div class="col-6">
+                        <div class="progress bg-secondary border-success position-relative" style="height: 20px;">
+                            <div class="progress-bar bg-success" role="progressbar"
+                                style="width: {{ .SolvedPercent }}%;" aria-valuenow="{{ .SolvedPercent }}"
+                                aria-valuemin="0" aria-valuemax="100"></div>
+                            <p class="justify-content-center d-flex position-absolute w-100">Total Solved</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{/* {{ template "profile_charts" . }} */}}
+        <div class="card bg-dark border-success shadow mt-3{{ if not .ActiveChallenge.Name }} d-none{{ end }}">
+            <div class="card-header">Machine info</div>
+            <div class="card-body">
+                <div class="d-flex flex-fill justify-content-between align-items-center">
+                    <div>{{ .ActiveChallenge.Name }}</div>
+                    <div>{{ .ActiveChallenge.IP }}</div>
+                    <div>{{ .ActiveChallenge.Status }}</div>
+                    <div>{{ .ActiveChallenge.Time }}</div>
+                    <div>
+                        <button type="button" class="btn btn-sm m-1 btn-outline-success" data-bs-toggle="modal"
+                            data-bs-target="#Modal{{ .ActiveChallenge.Name }}">
+                            Submit Flag
+                        </button>
+                        {{ template "submit" .ActiveChallenge }}
+                        <button type="button" class="btn btn-sm btn-outline-danger"
+                            onclick="manage_task('{{ .ActiveChallenge.Name }}', 'stop')">
+                            Terminate
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h1 class="h4 pt-3">My Challenges</h1>
+        <div class="row">
+            <div class="p-1">
+                {{ $ach := .ActiveChallenge }}
+                {{ range .User.UsersChallenges }}
+                <div class="row m-2 ">
+                    <div class="card bg-dark border-success p-0 shadow">
+                        <div class="row g-0">
+                            <div
+                                class="col-1 d-flex align-items-center justify-content-center bg-success rounded-start">
+                                {{ .Challenge.Category }}
+                            </div>
+                            <div class="col bg-primary bg-opacity-10">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <div class="h5 d-flex align-items-center m-0">{{ .Challenge.Name }}
+                                        <small class="text-muted px-1">#{{ .Challenge.Points }}</small>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        {{ if .Solved}}
+                                        <div class="text-success m-1">Solved</div>
+                                        {{ else }}
+                                        {{ end }}
+                                        {{ if eq .Challenge.Name $ach.Name}}
+                                        <div class="text-success m-1">Deployed</div>
+                                        {{ end }}
+                                        {{ if not $ach.Name }}
+                                        <button type="button" class="btn btn-sm m-1 btn-outline-success"
+                                            onclick="manage_task('{{ .Challenge.Name }}', 'run')">
+                                            Deploy
+                                        </button>
+                                        {{ end }}
+                                    </div>
+
+                                </div>
+                                <div class="card-body bg-dark">
+                                    {{ .Challenge.Description }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {{ end }}
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    async function submit_flag(task) {
+        try {
+            var flag = document.forms[task].flag.value
+            console.log(task, flag)
+            const result = await axios.post(
+                '/submit',
+                { name: task, flag: flag }
+            ).then(res => {
+                if (res.data.status === 202) {
+                    // modal.hide();
+                } else {
+                    input = document.getElementById(`${task}-flag`)
+                    input.classList.add('border-danger');
+                    text = document.getElementById(`${task}-text`)
+                    text.classList.add('text-danger');
+                    text.textContent = res.data.msg
+                }
+            })
+        } catch (errors) {
+            console.error(errors);
+        }
+        return false
+    }
+    async function manage_task(task, action) {
+        try {
+            const result = await axios.get(
+                '/challenge',
+                { params: { action: action, task: task } }
+            ).then(res => {
+                console.log(res.data)
+            }).catch(function (error) {
+                console.error(error)
+            })
+        } catch (errors) {
+            console.error(errors);
+        }
+    }
+
+</script>
+{{ template "end" }}

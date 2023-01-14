@@ -1,0 +1,83 @@
+{{ template "head" . }}
+<div class="row flex-nowrap">
+    <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark">
+        {{ template "admin_sidebar" . }}
+    </div>
+
+    <div class="col py-3">
+        <div class="row">
+            <div class="d-flex justify-content-end">
+                <a type="button" class="text-success" data-bs-toggle="modal" data-bs-target="#AssignChallenge">
+                    <i class="bi bi-plus-circle"></i>
+                </a>
+                {{ template "add_challenge" . }}
+            </div>
+        </div>
+        <div class="row"></div>
+        <table class="table table-dark mt-3">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Points</th>
+                    <th scope="col">Container</th>
+                    <th scope="col">Start</th>
+                    <th scope="col">End</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{ range .Challenges }}
+                <tr>
+                    <td>{{ .Name }}</td>
+                    <td>{{ .Description }}</td>
+                    <td>{{ .Points }}</td>
+                    <td>{{ .Container }}</td>
+                    <td>{{ .StartDate.Format "Jan 02" }}</td>
+                    <td>{{ .EndDate.Format "Jan 02" }}</td>
+                    <td>
+                        <a type="button" class="text-success" data-bs-toggle="modal"
+                            data-bs-target="#Challenge{{ .ID }}">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </td>
+
+                </tr>
+                {{ template "edit_challenge" . }}
+                {{ end }}
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    async function assignChallengeRequest() {
+        try {
+            var form = document.forms.assignChallenge
+            challenge = form.challengesSelect.options[document.getElementById("challengesSelect").selectedIndex].value
+            group = form.groupsSelect.options[document.getElementById("groupsSelect").selectedIndex].value
+            console.log(challenge, group)
+            const result = await axios.post(
+                '/admin/challenges/open',
+                { name: challenge, group: group }
+            ).then(res => {
+                console.log(res.data.msg)
+                if (res.data.status === 202) {
+
+                } else {
+                    input = document.getElementById(`${task}-flag`)
+                    input.classList.add('border-danger');
+                    text = document.getElementById(`${task}-text`)
+                    text.classList.add('text-danger');
+                    text.textContent = res.data.msg
+                }
+
+            }).catch(function (error) {
+                document.getElementById('loginError').innerHTML = error.response.data;
+            })
+        } catch (errors) {
+            console.error(errors);
+        }
+        return false
+    }
+</script>
+{{ template "end" }}
