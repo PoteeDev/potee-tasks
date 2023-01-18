@@ -18,27 +18,36 @@ func SetupAdmin(db *gorm.DB) {
 	hash, _ := HashPassword("admin")
 
 	user := models.User{
-		Login:   "admin",
-		Hash:    hash,
-		GroupID: 1,
-		RoleID:  2,
+		FirstName: "Admin",
+		Login:     "admin",
+		Hash:      hash,
+		Group:     models.Group{GroupCode: "admin"},
+		Role:      models.Role{Role: "admin"},
 	}
-	db.Create(&user)
+	if db.Model(&user).Where("login = ?", user.Login).Updates(&user).RowsAffected == 0 {
+		db.Create(&user)
+	}
 }
 
 func SetupFromConfig(db *gorm.DB) {
 	c := config.ReadConfig("config.yml")
-	// load Groups
+	// create Roles
 	var roles = []*models.Role{
 		{Role: "user"},
 		{Role: "admin"},
 	}
-	db.Create(roles)
-	var groups []*models.Group
-	for _, groupCode := range c.Groups {
-		groups = append(groups, &models.Group{GroupCode: groupCode})
+	for _, role := range roles {
+		if db.Model(&role).Where("role = ?", role.Role).Updates(&role).RowsAffected == 0 {
+			db.Create(&role)
+		}
 	}
-	db.Create(groups)
+	// load Groups from config
+	for _, groupCode := range c.Groups {
+		group := models.Group{GroupCode: groupCode}
+		if db.Model(&group).Where("group_code = ?", groupCode).Updates(&group).RowsAffected == 0 {
+			db.Create(&group)
+		}
+	}
 	// // Load Categories
 	// var categories []*models.Category
 	// for _, category := range c.Categories {

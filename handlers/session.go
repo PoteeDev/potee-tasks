@@ -46,9 +46,12 @@ type User struct {
 func (h *handler) IsAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session, _ := store.Get(r, "Session")
-		if auth, ok := session.Values["authenticated"]; auth.(bool) && ok {
-			next.ServeHTTP(w, r)
-			return
+		auth, ok := session.Values["authenticated"]
+		if ok {
+			if auth.(bool) {
+				next.ServeHTTP(w, r)
+				return
+			}
 		}
 		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 	})
@@ -169,7 +172,7 @@ func (h *handler) Registration(w http.ResponseWriter, r *http.Request) {
 		FirstName:  u.FirstName,
 		SecondName: u.SecondName,
 		Group:      group,
-		RoleID:     1,
+		Role:       models.Role{Role: "user"},
 	}
 
 	if err = vpnApi.AddClient(user.Login, u.Password, "10.42.0.0/16"); err != nil {

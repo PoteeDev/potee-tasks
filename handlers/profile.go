@@ -21,11 +21,11 @@ type ProfileData struct {
 }
 
 type ActiveChallenge struct {
-	Name   string
-	Label  string
-	Status string
-	IP     string
-	Time   string
+	Name   string `json:"name"`
+	Label  string `json:"label"`
+	Status string `json:"status"`
+	IP     string `json:"ip"`
+	Time   string `json:"time"`
 }
 
 func CaculateScore(u *models.User) int {
@@ -115,21 +115,9 @@ func (h *handler) ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	profile.SessionUser = SessionUser{name, role}
-	answer, _ := apiRequest(Request{name, "", ""}, "active")
-	profile.ActiveChallenge = ActiveChallenge{}
-	label := answer["msg"].(string)
-	if label != "" {
-		task := strings.TrimSuffix(label, fmt.Sprintf("-%s", name))
-		status, _ := apiRequest(Request{name, task, ""}, "status")
-		log.Println(status)
-		profile.ActiveChallenge.Name = task
-		profile.ActiveChallenge.Label = label
-		profile.ActiveChallenge.Status = status["phase"].(string)
-		profile.ActiveChallenge.IP = status["ip"].(string)
-		profile.ActiveChallenge.Time = status["created_at"].(string)
-	}
 
-	log.Println(profile.ActiveChallenge, answer)
+	profile.ActiveChallenge = requestActiveChallenge(name)
+
 	page := "profile.html"
 	if h.t.Lookup(page) != nil {
 		w.WriteHeader(200)
@@ -199,4 +187,35 @@ func (h *handler) ChallengeAction(w http.ResponseWriter, r *http.Request) {
 		log.Println(answer)
 	}
 
+}
+
+func requestActiveChallenge(name string) ActiveChallenge {
+	answer, _ := apiRequest(Request{name, "", ""}, "active")
+	// answer := map[string]interface{}{
+	// 	"msg": "ch1-admin",
+	// }
+	var ach ActiveChallenge
+	label := answer["name"].(string)
+	if label != "" {
+		task := strings.TrimSuffix(label, fmt.Sprintf("-%s", name))
+		// status, _ := apiRequest(Request{name, task, ""}, "status")
+		// status := map[string]interface{}{
+		// 	"phase":      "Running",
+		// 	"ip":         "1.1.1.1",
+		// 	"created_at": "18:24",
+		// }
+		ach.Name = task
+		ach.Label = label
+		ach.Status = answer["phase"].(string)
+		ach.IP = answer["ip"].(string)
+		ach.Time = answer["created_at"].(string)
+	}
+	return ach
+}
+
+func (h *handler) GetActiveChallenge(w http.ResponseWriter, r *http.Request) {
+	name, _ := h.GetUserName(r)
+	ach := requestActiveChallenge(name)
+	//log.Println("active challenge:", ach)
+	json.NewEncoder(w).Encode(&ach)
 }

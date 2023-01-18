@@ -1,3 +1,10 @@
-.dropdown-item:focus, .dropdown-item:hover {
+body {
+    font-family: 'Fira Code', sans-serif;
+}
+
+.dropdown-item:focus,
+.dropdown-item:hover {
     background-color: #212529;
-    color: orange !important;}
+    color: orange !important;
+}
+

@@ -1,7 +1,7 @@
 {{ template "head" . }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <div class="row pt-5">
-    <div class="col-md-3  h-25">
+    <div class="col-lg-3 min-vh-25 mb-3">
         <div class="card bg-transparent border-success shadow">
             <div class="card-body">
                 <div class="">
@@ -22,10 +22,10 @@
         </div>
 
     </div>
-    <div class="col-md-9">
+    <div class="col-lg-9">
         <div class="card bg-transparent border-success shadow">
             <div class="row">
-                <div class="col-2 mt-3 ms-3">
+                <div class="col-6 mt-3 ms-3">
                     <h1 class="h2">Info</h1>
                 </div>
             </div>
@@ -46,22 +46,22 @@
             </div>
         </div>
         {{/* {{ template "profile_charts" . }} */}}
-        <div class="card bg-dark border-success shadow mt-3{{ if not .ActiveChallenge.Name }} d-none{{ end }}">
+        <div id="machine_card"
+            class="card bg-dark border-success shadow mt-3{{ if not .ActiveChallenge.Name }} d-none{{ end }}">
             <div class="card-header">Machine info</div>
             <div class="card-body">
                 <div class="d-flex flex-fill justify-content-between align-items-center">
-                    <div>{{ .ActiveChallenge.Name }}</div>
-                    <div>{{ .ActiveChallenge.IP }}</div>
-                    <div>{{ .ActiveChallenge.Status }}</div>
-                    <div>{{ .ActiveChallenge.Time }}</div>
+                    <div id="ach_name">{{ .ActiveChallenge.Name }}</div>
+                    <div id="ach_ip">{{ .ActiveChallenge.IP }}</div>
+                    <div id="ach_status">{{ .ActiveChallenge.Status }}</div>
+                    <div id="ach_time">{{ .ActiveChallenge.Time }}</div>
                     <div>
                         <button type="button" class="btn btn-sm m-1 btn-outline-success" data-bs-toggle="modal"
-                            data-bs-target="#Modal{{ .ActiveChallenge.Name }}">
+                            data-bs-target="#Modal">
                             Submit Flag
                         </button>
-                        {{ template "submit" .ActiveChallenge }}
-                        <button type="button" class="btn btn-sm btn-outline-danger"
-                            onclick="manage_task('{{ .ActiveChallenge.Name }}', 'stop')">
+                        {{ template "submit" }}
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="manage_task('', 'stop')">
                             Terminate
                         </button>
                     </div>
@@ -78,8 +78,9 @@
                     <div class="card bg-dark border-success p-0 shadow">
                         <div class="row g-0">
                             <div
-                                class="col-1 d-flex align-items-center justify-content-center bg-success rounded-start">
-                                {{ .Challenge.Category }}
+                                class="col-lg-1 d-flex align-items-center justify-content-center bg-success">
+                                <div class="text-wrap">{{ .Challenge.Category }}</div>
+                                
                             </div>
                             <div class="col bg-primary bg-opacity-10">
                                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -116,20 +117,21 @@
     </div>
 </div>
 <script>
-    async function submit_flag(task) {
+    var ach
+    async function submit_flag() {
         try {
-            var flag = document.forms[task].flag.value
-            console.log(task, flag)
+            var flag = document.forms["ach"].flag.value
+            console.log(this.ach.name, flag)
             const result = await axios.post(
                 '/submit',
-                { name: task, flag: flag }
+                { name: this.ach.name, flag: flag }
             ).then(res => {
                 if (res.data.status === 202) {
                     // modal.hide();
                 } else {
-                    input = document.getElementById(`${task}-flag`)
+                    input = document.getElementById(`flag`)
                     input.classList.add('border-danger');
-                    text = document.getElementById(`${task}-text`)
+                    text = document.getElementById(`text`)
                     text.classList.add('text-danger');
                     text.textContent = res.data.msg
                 }
@@ -140,6 +142,9 @@
         return false
     }
     async function manage_task(task, action) {
+        if (task == "") {
+            task = this.ach.name
+        }
         try {
             const result = await axios.get(
                 '/challenge',
@@ -153,6 +158,31 @@
             console.error(errors);
         }
     }
+    async function active_task() {
+        try {
+            const result = await axios.get(
+                '/challenge/active'
+            ).then(res => {
+                console.log(res.data)
+                if (res.data.name === "") {
+                    document.getElementById("machine_card").classList.add("d-none")
+                } else {
 
+                    document.getElementById("ach_name").innerHTML = res.data.name
+                    document.getElementById("ach_status").innerHTML = res.data.status
+                    document.getElementById("ach_ip").innerHTML = res.data.ip
+                    document.getElementById("ach_time").innerHTML = res.data.time
+
+                    document.getElementById("machine_card").classList.remove("d-none")
+                }
+                this.ach = res.data
+            }).catch(function (error) {
+                console.error(error)
+            })
+        } catch (errors) {
+            console.error(errors);
+        }
+    }
+    setInterval(active_task, 2000);
 </script>
 {{ template "end" }}

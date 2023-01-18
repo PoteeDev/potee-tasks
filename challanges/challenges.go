@@ -19,12 +19,18 @@ func InitChallenge(db *gorm.DB) *Challenge {
 	return &Challenge{db}
 }
 
-func (c *Challenge) AddChallenges(tasks []models.Challenge) {
-	result := c.DB.Create(&tasks)
-	if result.Error != nil {
-		log.Println("add challenges:", result.Error.Error())
+func (c *Challenge) AddChallenges(challenges []models.Challenge) {
+	for _, ch := range challenges {
+		if c.DB.Model(&ch).Where("name = ?", ch.Name).Updates(&ch).RowsAffected == 0 {
+			result := c.DB.Create(&ch)
+			if result.Error != nil {
+				log.Println("add challenges:", result.Error.Error())
+			} else {
+				log.Printf("add/update %s chalenge", ch.Name)
+			}
+		}
 	}
-	log.Printf("add/update %d chalenges", result.RowsAffected)
+
 }
 
 func (c *Challenge) GetChallenges() {}

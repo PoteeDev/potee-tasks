@@ -15,6 +15,7 @@ FROM alpine:3.17
 WORKDIR /app
 COPY --from=build /console console
 COPY --from=build /app/templates templates
+COPY --from=build /app/static static
 EXPOSE 80
 
 ENTRYPOINT ["/app/console"]
