@@ -18,7 +18,7 @@ func basicAuth(username, password string) string {
 
 func CreateVPNClient() *VpnApi {
 	vpn := VpnApi{
-		Url:       fmt.Sprintf("http://%s", os.Getenv("OVPN_HOST")),
+		Url:       fmt.Sprintf("http://%s:8000", os.Getenv("OVPN_HOST")),
 		BasicAuth: basicAuth(os.Getenv("OVPN_USER"), os.Getenv("OVPN_PASSWORD")),
 	}
 	return &vpn

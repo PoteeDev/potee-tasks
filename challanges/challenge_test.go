@@ -6,6 +6,7 @@ import (
 	"console/models"
 	"log"
 	"testing"
+	"time"
 )
 
 var testUsername = "test"
@@ -15,7 +16,7 @@ var db = database.Connect()
 
 func TestTakeChallenge(t *testing.T) {
 	ch := challanges.InitChallenge(db)
-	ch.TakeChallenge(testUsername, testChallengeName)
+	ch.TakeChallenge(testUsername, testChallengeName, time.Now())
 
 	var user models.User
 	db.Preload("UsersChallenges").Where("login = ?", testUsername).First(&user)

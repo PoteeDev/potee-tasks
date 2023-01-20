@@ -50,15 +50,17 @@
     </div>
 </div>
 <script>
+
     async function assignChallengeRequest() {
         try {
             var form = document.forms.assignChallenge
             challenge = form.challengesSelect.options[document.getElementById("challengesSelect").selectedIndex].value
             group = form.groupsSelect.options[document.getElementById("groupsSelect").selectedIndex].value
+            expires_at = document.getElementById("formDate").value
             console.log(challenge, group)
             const result = await axios.post(
                 '/admin/challenges/open',
-                { name: challenge, group: group }
+                { name: challenge, group: group, expires_at, expires_at }
             ).then(res => {
                 console.log(res.data.msg)
                 if (res.data.status === 202) {
@@ -72,7 +74,7 @@
                 }
 
             }).catch(function (error) {
-                document.getElementById('loginError').innerHTML = error.response.data;
+                console.log(error)
             })
         } catch (errors) {
             console.error(errors);

@@ -1,8 +1,9 @@
 import requests
 from dataclasses import dataclass
+import sys
 url = "http://localhost"
 url = "http://192.168.0.20"
-
+url = sys.argv[1]
 @dataclass
 class User:
     first_name: str

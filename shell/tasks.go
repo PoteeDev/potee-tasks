@@ -5,6 +5,7 @@ import (
 	"console/models"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 )
@@ -32,7 +33,7 @@ func (s *Shell) Tasks(args ...string) string {
 	case "get":
 		if len(args) >= 2 {
 			for _, chName := range args[1:] {
-				if err := ch.TakeChallenge(s.Username, chName); err != nil {
+				if err := ch.TakeChallenge(s.Username, chName, time.Now()); err != nil {
 					return err.Error() + "\n"
 				}
 			}

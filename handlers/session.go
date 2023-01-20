@@ -172,7 +172,7 @@ func (h *handler) Registration(w http.ResponseWriter, r *http.Request) {
 		FirstName:  u.FirstName,
 		SecondName: u.SecondName,
 		Group:      group,
-		Role:       models.Role{Role: "user"},
+		RoleID:     1,
 	}
 
 	if err = vpnApi.AddClient(user.Login, u.Password, "10.42.0.0/16"); err != nil {

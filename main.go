@@ -37,6 +37,7 @@ func InitTemplates() *template.Template {
 
 func main() {
 	DB := database.Init()
+	log.Println("Database initialized")
 	t := InitTemplates()
 	h := handlers.New(DB, t)
 	mux := http.NewServeMux()

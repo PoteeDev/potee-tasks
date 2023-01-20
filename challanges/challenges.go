@@ -64,7 +64,7 @@ func GenereateFlag(n int) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
 
-func (c *Challenge) TakeChallenge(user string, challenge string) error {
+func (c *Challenge) TakeChallenge(user, challenge string, expiresAt time.Time) error {
 	var u models.User
 	c.DB.Where("login = ?", user).Preload("UsersChallenges").First(&u)
 
@@ -77,23 +77,29 @@ func (c *Challenge) TakeChallenge(user string, challenge string) error {
 
 	for _, uch := range u.UsersChallenges {
 		if uch.ChallengeID == ch.ID {
-			return fmt.Errorf("task already taken")
+			c.DB.Model(&uch).Update("expires_at", expiresAt)
+			return nil
 		}
 	}
 	u.UsersChallenges = append(u.UsersChallenges, models.UsersChallenge{
 		Challenge: ch,
 		Flag:      GenereateFlag(20),
+		ExpiresAt: expiresAt,
 	})
 
 	c.DB.Save(u)
 	return nil
 }
 
-func (c *Challenge) AddChallengeToGroup(group string, challenge string) error {
+func (c *Challenge) AddChallengeToGroup(group string, challenge string, expiresAt time.Time) error {
 	var g models.Group
+
+	log.Println(expiresAt)
 	c.DB.Preload("Users").First(&g, "group_code = ?", group)
 	for _, u := range g.Users {
-		c.TakeChallenge(u.Login, challenge)
+		if err := c.TakeChallenge(u.Login, challenge, expiresAt); err != nil {
+			return err
+		}
 	}
 	return nil
 }

@@ -31,5 +31,6 @@ type UsersChallenge struct {
 	Challenge   Challenge
 	Flag        string
 	Solved      bool
+	ExpiresAt   time.Time
 	SolvedDate  time.Time
 }

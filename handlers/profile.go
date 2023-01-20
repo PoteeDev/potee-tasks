@@ -91,8 +91,11 @@ func SolvedChallengeProgress(u models.User) int {
 			solvedCount += 1
 		}
 	}
-	percent := float64(solvedCount/len(u.UsersChallenges)) * 100
-	return int(percent)
+	if len(u.UsersChallenges) > 0 {
+		percent := float64(solvedCount/len(u.UsersChallenges)) * 100
+		return int(percent)
+	}
+	return 0
 }
 
 func (h *handler) ProfileHandler(w http.ResponseWriter, r *http.Request) {
@@ -116,7 +119,7 @@ func (h *handler) ProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 	profile.SessionUser = SessionUser{name, role}
 
-	profile.ActiveChallenge = requestActiveChallenge(name)
+	// profile.ActiveChallenge = requestActiveChallenge(name)
 
 	page := "profile.html"
 	if h.t.Lookup(page) != nil {

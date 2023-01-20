@@ -3,6 +3,7 @@ package challanges
 import (
 	"console/models"
 	"fmt"
+	"time"
 )
 
 func (c *Challenge) SubmitFlag(user, chName, flag string) error {
@@ -13,10 +14,15 @@ func (c *Challenge) SubmitFlag(user, chName, flag string) error {
 	if result.Error != nil {
 		return result.Error
 	}
-	if uch.Flag == flag {
-		uch.Solved = true
-		c.DB.Save(uch)
-		return nil
+
+	if time.Since(uch.ExpiresAt).Hours() <= 0 {
+		if uch.Flag == flag {
+			uch.Solved = true
+			uch.SolvedDate = time.Now()
+			c.DB.Save(uch)
+			return nil
+		}
+		return fmt.Errorf("wrong flag")
 	}
-	return fmt.Errorf("wrong flag")
+	return fmt.Errorf("time is over")
 }

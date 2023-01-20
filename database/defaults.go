@@ -22,7 +22,7 @@ func SetupAdmin(db *gorm.DB) {
 		Login:     "admin",
 		Hash:      hash,
 		Group:     models.Group{GroupCode: "admin"},
-		Role:      models.Role{Role: "admin"},
+		RoleID:    2,
 	}
 	if db.Model(&user).Where("login = ?", user.Login).Updates(&user).RowsAffected == 0 {
 		db.Create(&user)

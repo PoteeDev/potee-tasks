@@ -4,7 +4,9 @@ import (
 	"console/challanges"
 	"console/models"
 	"encoding/json"
+	"log"
 	"net/http"
+	"time"
 )
 
 type UserListAdminPage struct {
@@ -30,6 +32,7 @@ type ChallengesAdminPage struct {
 type OpenRequest struct {
 	ChallengeName string `json:"name"`
 	Group         string `json:"group"`
+	ExpiresAt     string `json:"expires_at"`
 }
 
 type OpenAnswer struct {
@@ -45,11 +48,12 @@ func (h *handler) OpenTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var answer OpenAnswer
+	log.Println(or.ExpiresAt)
+	expiresTime, _ := time.Parse("2006-01-02", or.ExpiresAt)
 	ch := challanges.InitChallenge(h.DB)
-	if err = ch.AddChallengeToGroup(or.Group, or.ChallengeName); err != nil {
+	if err = ch.AddChallengeToGroup(or.Group, or.ChallengeName, expiresTime); err != nil {
 		answer = OpenAnswer{http.StatusNotAcceptable, err.Error()}
 	} else {
-
 		answer = OpenAnswer{http.StatusAccepted, "challenge added"}
 	}
 	w.WriteHeader(http.StatusAccepted)
