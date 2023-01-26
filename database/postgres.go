@@ -35,7 +35,6 @@ func Init() *gorm.DB {
 	db.AutoMigrate(&models.User{})
 	db.AutoMigrate(&models.Challenge{})
 	db.AutoMigrate(&models.UsersChallenge{})
-	db.AutoMigrate(&models.Pool{})
 
 	SetupFromConfig(db)
 	SetupAdmin(db)

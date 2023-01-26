@@ -1,6 +1,7 @@
 package main
 
 import (
+	"console/auth"
 	"console/database"
 	"console/handlers"
 	"fmt"
@@ -8,22 +9,12 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
+
+	"github.com/go-redis/redis"
+	"github.com/rs/cors"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
-
-type RequestLogger struct {
-	h http.Handler
-	l *log.Logger
-}
-
-func (rl RequestLogger) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	start := time.Now()
-	// rl.l.Printf("Started %s %s", r.Method, r.URL.Path)
-	rl.h.ServeHTTP(w, r)
-	rl.l.Printf("- %v - %s %s in %v", start.Format("2006-01-02T15:04:05Z07:00"), r.Method, r.URL.Path, time.Since(start))
-}
 
 func InitTemplates() *template.Template {
 	t, err := template.ParseGlob("./templates/*.html")
@@ -35,37 +26,65 @@ func InitTemplates() *template.Template {
 	return t
 }
 
+func NewRedisDB() *redis.Client {
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     os.Getenv("REDIS_HOST") + ":6379",
+		Password: os.Getenv("REDIS_PASSWORD"),
+		DB:       0,
+	})
+	return redisClient
+}
+
 func main() {
 	DB := database.Init()
 	log.Println("Database initialized")
 	t := InitTemplates()
-	h := handlers.New(DB, t)
+	redisClient := NewRedisDB()
+	rd := auth.NewAuth(redisClient)
+	tk := auth.NewToken()
+	h := handlers.New(DB, t, rd, tk)
 	mux := http.NewServeMux()
 	fs := http.FileServer(http.Dir("static"))
 	mux.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	mux.Handle("/", h.IsAuth(http.HandlerFunc(h.ServeIndex)))
-	mux.HandleFunc("/login", h.LoginHandler)
+	mux.HandleFunc("/login", h.Signin)
 	mux.HandleFunc("/logout", h.Logout)
+	mux.HandleFunc("/refresh", h.Refresh)
 	mux.HandleFunc("/register", h.Registration)
 
-	mux.Handle("/challenges", h.IsAuth(http.HandlerFunc(h.ChallengesHandler)))
+	mux.Handle("/tasks", h.IsAuth(http.HandlerFunc(h.ChallengesHandler)))
 	mux.Handle("/profile", h.IsAuth(http.HandlerFunc(h.ProfileHandler)))
-	mux.Handle("/challenge", h.IsAuth(http.HandlerFunc(h.ChallengeAction)))
-	mux.Handle("/challenge/active", h.IsAuth(http.HandlerFunc(h.GetActiveChallenge)))
-	mux.Handle("/submit", h.IsAuth(http.HandlerFunc(h.Submit)))
-	mux.Handle("/download/vpn", h.IsAuth(http.HandlerFunc(h.DownloadVpn)))
+	// machine
+	mux.Handle("/machine/active", h.IsAuth(http.HandlerFunc(h.GetActiveChallenge)))
+	mux.Handle("/machine/start", h.IsAuth(http.HandlerFunc(h.RunMachineHandler)))
+	mux.Handle("/machine/stop", h.IsAuth(http.HandlerFunc(h.StopMachineHandler)))
+	mux.Handle("/tasks/submit", h.IsAuth(http.HandlerFunc(h.Submit)))
+	mux.Handle("/profile/vpn", h.IsAuth(http.HandlerFunc(h.DownloadVpn)))
 
-	mux.Handle("/admin/users", h.IsAuth(h.IsAdmin(http.HandlerFunc(h.UsersListHandler))))
-	mux.Handle("/admin/challenges", h.IsAuth(h.IsAdmin(http.HandlerFunc(h.ChallengesList))))
-	mux.Handle("/admin/challenges/open", h.IsAuth(h.IsAdmin(http.HandlerFunc(h.OpenTask))))
-
-	infoFunc := http.HandlerFunc(h.GetInfo)
-	mux.Handle("/srv/info", h.SrvKeyMiddleware()(infoFunc))
+	mux.Handle("/admin/users", h.IsAuth(http.HandlerFunc(h.UsersListHandler)))
+	mux.Handle("/admin/tasks", h.IsAuth(http.HandlerFunc(h.ChallengesList)))
+	mux.Handle("/admin/tasks/open", h.IsAuth(http.HandlerFunc(h.OpenTask)))
 
 	InitMetrics(DB).recordMetrics()
 	mux.Handle("/metrics", promhttp.Handler())
 
+	cors := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{
+			http.MethodPost,
+			http.MethodGet,
+		},
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: false,
+	})
+
 	fmt.Println("Run server")
-	log.Fatal(http.ListenAndServe(":8080", Logger(os.Stderr, mux)))
+	log.Fatal(http.ListenAndServe(
+		":8080",
+		Logger(
+			os.Stderr,
+			cors.Handler(mux),
+		),
+	))
 }

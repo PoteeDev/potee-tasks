@@ -45,31 +45,33 @@ type User struct {
 
 func (h *handler) IsAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, _ := store.Get(r, "Session")
-		auth, ok := session.Values["authenticated"]
-		if ok {
-			if auth.(bool) {
-				next.ServeHTTP(w, r)
-				return
-			}
+		metadata, _ := h.tk.ExtractTokenMetadata(r)
+		if metadata != nil {
+			next.ServeHTTP(w, r)
+			return
 		}
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{
+			"detail": "token is invalid",
+		})
 	})
 }
 
 func (h *handler) IsAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, _ := store.Get(r, "Session")
-		// TODO: change username
-		if session.Values["role"] == "admin" {
-			next.ServeHTTP(w, r)
-			return
+		metadata, _ := h.tk.ExtractTokenMetadata(r)
+		if metadata != nil {
+			if metadata.Role == "admin" {
+				next.ServeHTTP(w, r)
+				return
+			}
 		}
-		http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{
+			"detail": "token is invalid",
+		})
 	})
 }
-
-func (h *handler) Authorize() {}
 
 func (h *handler) LoginPage(w http.ResponseWriter, r *http.Request) {
 	page := "login.html"
@@ -193,12 +195,12 @@ func (h *handler) Registration(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello, %s!\n", user.Login)
 }
 
-func (h *handler) Logout(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "Session")
+// func (h *handler) Logout(w http.ResponseWriter, r *http.Request) {
+// 	session, _ := store.Get(r, "Session")
 
-	// Revoke users authentication
-	session.Values["authenticated"] = false
-	session.Options.MaxAge = -1
-	session.Save(r, w)
-	http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
-}
+// 	// Revoke users authentication
+// 	session.Values["authenticated"] = false
+// 	session.Options.MaxAge = -1
+// 	session.Save(r, w)
+// 	http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+// }

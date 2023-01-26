@@ -10,23 +10,18 @@ import (
 )
 
 type UserListAdminPage struct {
-	Groups      []models.Group
-	SessionUser SessionUser
+	Groups []models.Group `json:"groups,omitempty"`
 }
 
 func (h *handler) UsersListHandler(w http.ResponseWriter, r *http.Request) {
-	var pd UserListAdminPage
-	name, role := h.GetUserName(r)
-	pd.SessionUser = SessionUser{name, role}
+	var groups UserListAdminPage
 
-	h.DB.Preload("Users").Find(&pd.Groups)
-	h.RenderTemplate(w, "admin.html", pd)
+	h.DB.Preload("Users.UsersChallenges.Challenge").Find(&groups.Groups)
+	json.NewEncoder(w).Encode(&groups)
 }
 
 type ChallengesAdminPage struct {
-	Challenges  []models.Challenge
-	Groups      []models.Group
-	SessionUser SessionUser
+	Challenges []models.Challenge `json:"tasks,omitempty"`
 }
 
 type OpenRequest struct {
@@ -61,11 +56,8 @@ func (h *handler) OpenTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) ChallengesList(w http.ResponseWriter, r *http.Request) {
-	var pd ChallengesAdminPage
-	name, role := h.GetUserName(r)
-	pd.SessionUser = SessionUser{name, role}
+	var chs ChallengesAdminPage
 
-	h.DB.Find(&pd.Challenges)
-	h.DB.Find(&pd.Groups)
-	h.RenderTemplate(w, "admin_challenges.html", pd)
+	h.DB.Find(&chs.Challenges)
+	json.NewEncoder(w).Encode(&chs)
 }

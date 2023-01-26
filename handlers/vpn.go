@@ -8,8 +8,8 @@ import (
 var vpnApi = vpn.CreateVPNClient()
 
 func (h *handler) DownloadVpn(w http.ResponseWriter, r *http.Request) {
-	name, _ := h.GetUserName(r)
-	configFile := vpnApi.DownloadConf(name)
+	user, _ := h.tk.ExtractTokenMetadata(r)
+	configFile := vpnApi.DownloadConf(user.UserId)
 	if configFile != nil {
 		w.WriteHeader(http.StatusOK)
 	} else {

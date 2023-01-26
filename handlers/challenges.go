@@ -2,19 +2,16 @@ package handlers
 
 import (
 	"console/models"
+	"encoding/json"
 	"net/http"
 )
 
-type ChallengePageData struct {
-	Challenges  []models.Challenge
-	SessionUser SessionUser
+type ChallengesData struct {
+	Challenges []models.Challenge `json:"tasks"`
 }
 
 func (h *handler) ChallengesHandler(w http.ResponseWriter, r *http.Request) {
-	var pd ChallengePageData
-	name, role := h.GetUserName(r)
-	pd.SessionUser = SessionUser{Login: name, Role: role}
-	h.DB.Find(&pd.Challenges)
-
-	h.RenderTemplate(w, "challenges.html", pd)
+	var cd ChallengesData
+	h.DB.Find(&cd.Challenges)
+	json.NewEncoder(w).Encode(cd)
 }

@@ -1,21 +1,25 @@
 package handlers
 
 import (
+	"console/auth"
 	"html/template"
 	"log"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+
 	"gorm.io/gorm"
 )
 
 type handler struct {
 	DB *gorm.DB
 	t  *template.Template
+	rd auth.AuthInterface
+	tk auth.TokenInterface
 }
 
-func New(db *gorm.DB, t *template.Template) handler {
-	return handler{db, t}
+func New(db *gorm.DB, t *template.Template, rd auth.AuthInterface, tk auth.TokenInterface) handler {
+	return handler{db, t, rd, tk}
 }
 
 var Validator = validator.New()
