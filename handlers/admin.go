@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"sort"
 	"time"
 )
 
@@ -17,6 +18,15 @@ func (h *handler) UsersListHandler(w http.ResponseWriter, r *http.Request) {
 	var groups UserListAdminPage
 
 	h.DB.Preload("Users.UsersChallenges.Challenge").Find(&groups.Groups)
+	// sort users challenges
+	for g, group := range groups.Groups {
+		for u, _ := range group.Users {
+			sort.Slice(groups.Groups[g].Users[u].UsersChallenges, func(i, j int) bool {
+				return groups.Groups[g].Users[u].UsersChallenges[i].ID < groups.Groups[g].Users[u].UsersChallenges[j].ID
+			})
+		}
+	}
+
 	json.NewEncoder(w).Encode(&groups)
 }
 

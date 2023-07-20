@@ -30,7 +30,7 @@ type RegisterUser struct {
 	GroupCode  string `json:"group" validate:"required"`
 	FirstName  string `json:"first_name" validate:"required"`
 	SecondName string `json:"second_name" validate:"required"`
-	Email      string `json:"email" validate:"email,required"`
+	TgUsername string `json:"tg_username" validate:"required"`
 	Password   string `json:"password" validate:"required"`
 }
 type LoginUser struct {
@@ -73,63 +73,6 @@ func (h *handler) IsAdmin(next http.Handler) http.Handler {
 	})
 }
 
-func (h *handler) LoginPage(w http.ResponseWriter, r *http.Request) {
-	page := "login.html"
-	if h.t.Lookup(page) != nil {
-		w.WriteHeader(200)
-		h.t.ExecuteTemplate(w, page, nil)
-		return
-	}
-	w.WriteHeader(404)
-	w.Write([]byte("not found"))
-}
-
-func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
-	var u LoginUser
-	u.Login = r.FormValue("login")
-	u.Password = r.FormValue("password")
-
-	if vErr := ValidateStruct(u); vErr != nil {
-		http.Error(w, "invalid data", http.StatusBadRequest)
-		return
-	}
-
-	var user models.User
-	if uErr := h.DB.Preload("Role").First(&user, "login = ?", u.Login).Error; uErr != nil {
-		if errors.Is(uErr, gorm.ErrRecordNotFound) {
-			http.Error(w, "login not found", http.StatusBadRequest)
-			return
-		} else {
-			http.Error(w, "smething bad happened", http.StatusBadRequest)
-			return
-		}
-	}
-
-	if CheckPasswordHash(u.Password, user.Hash) {
-		log.Println("success auth for user", user.Login)
-
-		session, _ := store.Get(r, "Session")
-		session.Values["authenticated"] = true
-		session.Values["name"] = u.Login
-		session.Values["role"] = user.Role.Role
-		session.Save(r, w)
-
-		http.Redirect(w, r, "/", http.StatusPermanentRedirect)
-		return
-	}
-
-	http.Error(w, "invalid credentials", http.StatusForbidden)
-
-}
-func (h *handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		h.LoginPage(w, r)
-	case "POST":
-		h.Login(w, r)
-	}
-}
-
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 6)
 	return string(bytes), err
@@ -169,7 +112,7 @@ func (h *handler) Registration(w http.ResponseWriter, r *http.Request) {
 	hash, _ := HashPassword(u.Password)
 	user := models.User{
 		Login:      GenerateLogin(u),
-		Email:      u.Email,
+		TgUsername: u.TgUsername,
 		Hash:       hash,
 		FirstName:  u.FirstName,
 		SecondName: u.SecondName,
@@ -194,13 +137,3 @@ func (h *handler) Registration(w http.ResponseWriter, r *http.Request) {
 	// Do something with the Person struct...
 	fmt.Fprintf(w, "Hello, %s!\n", user.Login)
 }
-
-// func (h *handler) Logout(w http.ResponseWriter, r *http.Request) {
-// 	session, _ := store.Get(r, "Session")
-
-// 	// Revoke users authentication
-// 	session.Values["authenticated"] = false
-// 	session.Options.MaxAge = -1
-// 	session.Save(r, w)
-// 	http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
-// }

@@ -54,7 +54,7 @@ func (t *tokenservice) CreateToken(userId, role string) (*TokenDetails, error) {
 	rtClaims := jwt.MapClaims{}
 	rtClaims["refresh_uuid"] = td.RefreshUuid
 	rtClaims["user_id"] = userId
-	atClaims["role"] = role
+	rtClaims["role"] = role
 	rtClaims["exp"] = td.RtExpires
 	rt := jwt.NewWithClaims(jwt.SigningMethodHS256, rtClaims)
 
@@ -105,12 +105,14 @@ func extract(token *jwt.Token) (*AccessDetails, error) {
 	if ok && token.Valid {
 		accessUuid, ok := claims["access_uuid"].(string)
 		userId, userOk := claims["user_id"].(string)
-		if !ok || !userOk {
+		role, roleOk := claims["role"].(string)
+		if !ok || !userOk || !roleOk {
 			return nil, errors.New("unauthorized")
 		} else {
 			return &AccessDetails{
 				TokenUuid: accessUuid,
 				UserId:    userId,
+				Role:      role,
 			}, nil
 		}
 	}

@@ -46,8 +46,6 @@ func main() {
 	mux := http.NewServeMux()
 	fs := http.FileServer(http.Dir("static"))
 	mux.Handle("/static/", http.StripPrefix("/static/", fs))
-
-	mux.Handle("/", h.IsAuth(http.HandlerFunc(h.ServeIndex)))
 	mux.HandleFunc("/login", h.Signin)
 	mux.HandleFunc("/logout", h.Logout)
 	mux.HandleFunc("/refresh", h.Refresh)
@@ -62,9 +60,11 @@ func main() {
 	mux.Handle("/tasks/submit", h.IsAuth(http.HandlerFunc(h.Submit)))
 	mux.Handle("/profile/vpn", h.IsAuth(http.HandlerFunc(h.DownloadVpn)))
 
-	mux.Handle("/admin/users", h.IsAuth(http.HandlerFunc(h.UsersListHandler)))
-	mux.Handle("/admin/tasks", h.IsAuth(http.HandlerFunc(h.ChallengesList)))
-	mux.Handle("/admin/tasks/open", h.IsAuth(http.HandlerFunc(h.OpenTask)))
+	mux.Handle("/admin/users", h.IsAdmin(http.HandlerFunc(h.UsersListHandler)))
+	// mux.Handle("/admin/users/edit", h.IsAdmin(http.HandlerFunc(h.EditUser)))
+	mux.Handle("/admin/users/delete", h.IsAdmin(http.HandlerFunc(h.DeleteUser)))
+	mux.Handle("/admin/tasks", h.IsAdmin(http.HandlerFunc(h.ChallengesList)))
+	mux.Handle("/admin/tasks/open", h.IsAdmin(http.HandlerFunc(h.OpenTask)))
 
 	InitMetrics(DB).recordMetrics()
 	mux.Handle("/metrics", promhttp.Handler())

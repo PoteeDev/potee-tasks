@@ -40,7 +40,7 @@ func (h *handler) generateTokens(userId, role string) (error, map[string]interfa
 }
 
 type JwtTokens struct {
-	AccessToken  string    `json:"access_token"`
+	AccessToken  string    `json:"token"`
 	RefreshToken string    `json:"refresh_token"`
 	ExpiresAt    time.Time `json:"expires_at"`
 }
@@ -59,10 +59,16 @@ func (h *handler) Signin(w http.ResponseWriter, r *http.Request) {
 	log.Println(creds)
 	if err = h.DB.Preload("Role").First(&user, "login = ?", creds.Username).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			http.Error(w, "login not found", http.StatusBadRequest)
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{
+				"detail": "invalid credentials",
+			})
 			return
 		} else {
-			http.Error(w, "smething bad happened", http.StatusBadRequest)
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{
+				"detail": "something bad happened",
+			})
 			return
 		}
 	}
@@ -78,6 +84,9 @@ func (h *handler) Signin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusUnauthorized)
+	json.NewEncoder(w).Encode(map[string]string{
+		"detail": "invalid credentials",
+	})
 
 }
 
@@ -119,6 +128,7 @@ func (h *handler) Refresh(w http.ResponseWriter, r *http.Request) {
 	if ok && token.Valid {
 		refreshUuid, ok := claims["refresh_uuid"].(string) //convert the interface to string
 		if !ok {
+			log.Println("refresh_uuid error")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(map[string]string{
 				"detail": "refresh uuid",
@@ -127,6 +137,7 @@ func (h *handler) Refresh(w http.ResponseWriter, r *http.Request) {
 		}
 		userId, roleOk := claims["user_id"].(string)
 		if !roleOk {
+			log.Println("user_id error")
 			w.WriteHeader(http.StatusUnauthorized)
 			json.NewEncoder(w).Encode(map[string]string{
 				"detail": "unauthorized",
@@ -135,6 +146,7 @@ func (h *handler) Refresh(w http.ResponseWriter, r *http.Request) {
 		}
 		role, roleOk := claims["role"].(string)
 		if !roleOk {
+			log.Println("role error")
 			w.WriteHeader(http.StatusUnauthorized)
 			json.NewEncoder(w).Encode(map[string]string{
 				"detail": "unauthorized",
@@ -144,6 +156,7 @@ func (h *handler) Refresh(w http.ResponseWriter, r *http.Request) {
 		//Delete the previous Refresh Token
 		delErr := h.rd.DeleteRefresh(refreshUuid)
 		if delErr != nil { //if any goes wrong
+			log.Println("delete error:", delErr)
 			w.WriteHeader(http.StatusUnauthorized)
 			json.NewEncoder(w).Encode(map[string]string{
 				"detail": "unauthorized",
@@ -179,8 +192,12 @@ func (h *handler) Logout(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
+		json.NewEncoder(w).Encode(map[string]string{
+			"msg": "successfully logged out",
+		})
 	}
+	w.WriteHeader(http.StatusBadRequest)
 	json.NewEncoder(w).Encode(map[string]string{
-		"msg": "successfully logged out",
+		"detail": "invalid token",
 	})
 }

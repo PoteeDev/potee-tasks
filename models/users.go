@@ -1,6 +1,8 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type User struct {
 	gorm.Model      `json:"-"`
@@ -9,12 +11,12 @@ type User struct {
 	Login           string           `gorm:"unique;not null" json:"login,omitempty"`
 	FirstName       string           `json:"first_name,omitempty"`
 	SecondName      string           `json:"second_name,omitempty"`
-	Email           string           `json:"email,omitempty"`
+	TgUsername      string           `json:"tg_username,omitempty"`
 	RoleID          uint             `json:"-"`
 	Role            Role             `json:"role,omitempty"`
-	Hash            string           `json:"hash,omitempty"`
+	Hash            string           `json:"-"`
 	VpnClienId      string           `json:"vpn_clien_id,omitempty"`
-	UsersChallenges []UsersChallenge `json:"tasks,omitempty"`
+	UsersChallenges []UsersChallenge `json:"tasks,omitempty" gorm:"constraint:OnDelete:CASCADE;"`
 }
 
 type Group struct {

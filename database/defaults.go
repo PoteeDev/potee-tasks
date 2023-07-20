@@ -4,6 +4,7 @@ import (
 	"console/challanges"
 	"console/config"
 	"console/models"
+	"os"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -15,7 +16,7 @@ func HashPassword(password string) (string, error) {
 }
 
 func SetupAdmin(db *gorm.DB) {
-	hash, _ := HashPassword("admin")
+	hash, _ := HashPassword(os.Getenv("ADMIN_PASS"))
 
 	user := models.User{
 		FirstName: "Admin",
@@ -48,13 +49,6 @@ func SetupFromConfig(db *gorm.DB) {
 			db.Create(&group)
 		}
 	}
-	// // Load Categories
-	// var categories []*models.Category
-	// for _, category := range c.Categories {
-	// 	categories = append(categories, &models.Category{Name: category})
-	// }
-	// db.Create(categories)
-	// upload Challenges
 	ch := challanges.InitChallenge(db)
 	ch.AddChallenges(c.Tasks)
 }

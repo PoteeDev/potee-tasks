@@ -32,21 +32,6 @@ func CaculateScore(u *models.User) int {
 	return score
 }
 
-func (h *handler) GetUserName(r *http.Request) (string, string) {
-	session, _ := store.Get(r, "Session")
-	name, ok := session.Values["name"]
-	if !ok {
-		log.Println("session name is empty")
-		return "", ""
-	}
-	var u models.User
-	h.DB.Model(&models.User{}).
-		Preload("Role").
-		First(&u, "login = ?", name.(string))
-
-	return name.(string), u.Role.Role
-}
-
 type FlagSubmit struct {
 	ChallengeName string `json:"name"`
 	Flag          string `json:"flag"`
@@ -79,14 +64,14 @@ func (h *handler) Submit(w http.ResponseWriter, r *http.Request) {
 }
 
 func SolvedChallengeProgress(u models.User) int {
-	solvedCount := 0
+	var solvedCount float64 = 0
 	for _, ch := range u.UsersChallenges {
 		if ch.Solved {
 			solvedCount += 1
 		}
 	}
 	if len(u.UsersChallenges) > 0 {
-		percent := float64(solvedCount/len(u.UsersChallenges)) * 100
+		percent := solvedCount / float64(len(u.UsersChallenges)) * 100
 		return int(percent)
 	}
 	return 0
@@ -98,6 +83,9 @@ func (h *handler) ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	var u models.User
 	result := h.DB.Model(&models.User{}).
 		Preload("Group").
+		// Preload("UsersChallenges", func(db *gorm.DB) *gorm.DB {
+		// 	return h.DB.Order("challenge_id asc")
+		// }).
 		Preload("UsersChallenges.Challenge").
 		First(&u, "login = ?", name)
 

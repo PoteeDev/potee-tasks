@@ -10,7 +10,7 @@ var defaultUser = handlers.RegisterUser{
 	FirstName:  "Ivan",
 	SecondName: "Ivanov",
 	Password:   "test",
-	Email:      "test@mail.ru",
+	TgUsername: "ivanh",
 }
 
 func TestHealthCheckHandler(t *testing.T) {
